@@ -27,6 +27,8 @@ def style_transfer_model(encoder='models/vgg_normalised.h5', decoder='models/dec
 
     st_model = Model(inputs=[image, style], outputs=out)
 
+    decoder.summary()
+
     return st_model
 
 

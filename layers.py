@@ -1,7 +1,7 @@
 from keras.backend import tf as ktf
 from keras.engine import Layer
 from keras.utils import conv_utils
-
+import keras.backend as K
 
 class ReflectionPad(Layer):
     def __init__(self, padding=((1, 1), (1, 1)), data_format=None, **kwargs):
@@ -12,7 +12,7 @@ class ReflectionPad(Layer):
     def compute_output_shape(self, input_shape):
         if input_shape[2] is None:
             return (input_shape[0], None, None, input_shape[3]) if self.data_format == 'channels_last' else (
-            input_shape[0], input_shape[1], None, None)
+                input_shape[0], input_shape[1], None, None)
         if self.data_format == 'channels_last':
             shape = (input_shape[0], input_shape[1] + sum(self.paddings[0]), input_shape[2] + sum(self.paddings[1]),
                      input_shape[3])
@@ -64,3 +64,81 @@ class AdaIN(Layer):
         config = {'eps': self.eps}
         base_config = super(AdaIN, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
+
+
+import numpy as np
+def preprocess_symbolic_input(x, data_format, mode):
+    _IMAGENET_MEAN = None
+
+    if mode == 'tf':
+        x /= 127.5
+        x -= 1.
+        return x
+
+    if _IMAGENET_MEAN is None:
+        _IMAGENET_MEAN = K.constant(-np.array([103.939, 116.779, 123.68]))
+    # Zero-center by mean pixel
+    if K.dtype(x) != K.dtype(_IMAGENET_MEAN):
+        x = K.bias_add(x, K.cast(_IMAGENET_MEAN, K.dtype(x)), data_format)
+    else:
+        x = K.bias_add(x, _IMAGENET_MEAN, data_format)
+
+    if data_format == 'channels_first':
+        # 'RGB'->'BGR'
+        if K.ndim(x) == 3:
+            x = x[::-1, ...]
+        else:
+            x = x[:, ::-1, ...]
+    else:
+        # 'RGB'->'BGR'
+        x = x[..., ::-1]
+
+
+    return x
+
+class LRN(Layer):
+    def __init__(self, alpha=1e-4, k=1, beta=0.75, n=5, data_format=None, **kwargs):
+        if n % 2 == 0:
+            raise NotImplementedError("LRN2D only works with odd n. n provided: " + str(n))
+        super(LRN, self).__init__(**kwargs)
+        self.alpha = alpha
+        self.k = k
+        self.beta = beta
+        self.n = n
+        self.data_format = conv_utils.normalize_data_format(data_format)
+
+    def build(self, input_shape):
+        super(LRN, self).build(input_shape)  # Be sure to call this somewhere!
+
+    def call(self, X, mask=None):
+        if self.data_format == 'channels_last':
+            b, r, c, ch = K.int_shape(X)
+        else:
+            b, ch, r, c = K.int_shape(X)
+        half = self.n // 2
+        square = K.square(X)
+        if self.data_format != 'channels_last':
+            extra_channels = K.spatial_2d_padding(square,
+                                                  padding=((half, half), (0, 0)), data_format='channels_last')
+        else:
+            extra_channels = K.spatial_2d_padding(K.permute_dimensions(square, (0, 3, 1, 2)),
+                                                  padding=((half, half), (0, 0)), data_format='channels_last')
+
+        scale = self.k
+        for i in range(self.n):
+            scale += (self.alpha / self.n) * extra_channels[:, i:(i + ch), :, :]
+        scale = scale ** self.beta
+        if self.data_format == 'channels_last':
+            scale = K.permute_dimensions(scale, (0, 2, 3, 1))
+        return X / scale
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
+    def get_config(self):
+        return {"name": self.name,
+                "alpha": self.alpha,
+                "k": self.k,
+                "beta": self.beta,
+                "n": self.n,
+                "data_format": self.data_format}
