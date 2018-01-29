@@ -2,11 +2,10 @@ from keras.models import Model, Input, load_model
 from layers import ReflectionPad
 from layers import AdaIN
 import numpy as np
+from keras import backend as K
 
 
-def style_transfer_model(encoder='models/vgg_normalised.h5', decoder='models/decoder.h5'):
-    from keras import backend as K
-
+def get_encoder(encoder='models/vgg_normalised.h5'):
     K.set_image_data_format('channels_first')
 
     vgg = load_model(encoder, custom_objects={'ReflectionPad': ReflectionPad}, compile=False)
@@ -14,6 +13,19 @@ def style_transfer_model(encoder='models/vgg_normalised.h5', decoder='models/dec
     y = outputs_dict['Threshold_30']
 
     encoder = Model(inputs=vgg.input, outputs=y, name='vgg16')
+    inp = Input((3, None, None))
+    return Model(inputs=inp, outputs=encoder(inp))
+
+
+def get_decoder(decoder='models/decoder.h5'):
+    K.set_image_data_format('channels_first')
+    decoder = load_model(decoder, custom_objects = {'ReflectionPad' : ReflectionPad})
+    return decoder
+
+
+def style_transfer_model(encoder='models/vgg_normalised.h5', decoder='models/decoder.h5'):
+    encoder = get_encoder(encoder)
+
     image, style = Input((3, None, None)), Input((3, None, None))
 
     f_image = encoder(image)
@@ -21,8 +33,7 @@ def style_transfer_model(encoder='models/vgg_normalised.h5', decoder='models/dec
 
     re_norm_image = AdaIN()([f_image, f_style])
 
-    decoder = load_model(decoder, custom_objects = {'ReflectionPad' : ReflectionPad})
-
+    decoder = get_decoder(decoder)
     out = decoder(re_norm_image)
 
     st_model = Model(inputs=[image, style], outputs=out)
@@ -30,6 +41,7 @@ def style_transfer_model(encoder='models/vgg_normalised.h5', decoder='models/dec
     decoder.summary()
 
     return st_model
+
 
 
 def preprocess_input(inp):
