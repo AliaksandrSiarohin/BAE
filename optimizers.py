@@ -2,6 +2,25 @@ import numpy as np
 from scipy.stats import multivariate_normal
 
 
+class GradientDecent(object):
+    def __init__(self, oracle, lr=0.1):
+        """
+        :param oracle: Oracle function that compute log(value) and a gradient(log(value)) in a given point
+        """
+        self.oracle = oracle
+        self.number_of_steps = 0
+        self.lr = lr
+
+    def initialize(self, intialization):
+        self.current = intialization
+
+    def update(self):
+        value, grad = self.oracle(self.current)
+        self.current -= self.lr * grad
+        self.number_of_steps += 1
+        return value
+
+
 class MetropolisHastingsMCMC(object):
     def __init__(self, density):
         self.density = density

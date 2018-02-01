@@ -6,6 +6,7 @@ from keras.layers.advanced_activations import LeakyReLU
 import numpy as np
 import os
 from skimage.io import imread
+from skimage.color import gray2rgb
 
 from gan.wgan_gp import WGAN_GP
 from gan.dataset import ArrayDataset
@@ -67,26 +68,35 @@ class StylesDataset(ArrayDataset):
             return X
 
         images_names = os.listdir(self.input_dir)
-        X = np.empty(shape=(len(images_names), self.number_of_channels * 2))
+        X = []# np.empty(shape=(len(images_names), self.number_of_channels * 2))
 
         print ("Extract batch statistics from style images...")
-        for i, name in tqdm(enumerate(images_names)):
-            img = imread(os.path.join(self.input_dir, name))
-            img = preprocess_input(img)
+        for i, name in tqdm(list(enumerate(images_names))):
+            try:
+                img = imread(os.path.join(self.input_dir, name))
+            except:
+                print ("Error when processing image %s" % name)
+		continue
+            if len(img.shape) == 2 or img.shape[2] == 1:
+		img = gray2rgb(img)
+	    if img.shape[2] == 4:
+		img = img[..., :3]
+	    img = preprocess_input(img)
             emb = style_encoder_model.predict(img)
-
+            
             mean = np.mean(emb, axis=(0, 2, 3))
             var = np.var(emb, axis=(0, 2, 3))
 
-            X[i] = np.concatenate([mean, var], axis=0)
-
+            X.append(np.concatenate([mean, var], axis=0))
+	
+	X = np.array(X)
         if self.cache_file_name is not None:
             print ('Saving to batch statistics to cache...')
             cache_dir = os.path.dirname(self.cache_file_name)
             if not os.path.exists(cache_dir):
                 os.makedirs(cache_dir)
             np.save(self.cache_file_name, X)
-
+	print ("Shape of X is %s" % str(X.shape))
         return X
 
     def create_style_transfer_model(self):
@@ -131,11 +141,10 @@ def main():
 
     parser = parser_with_default_args()
     parser.add_argument("--input_dir", default='dataset/media_watercolor')
-    parser.add_argument("--cache_file_name", default='tmp/media_watercolor.npy')
+    parser.add_argument("--cache_file_name", default=None)
     parser.add_argument("--content_image", default='cornell_cropped.jpg')
 
     args = parser.parse_args()
-    args.batch_size = 64
 
     dataset = StylesDataset(args.batch_size, args.input_dir, cache_file_name=args.cache_file_name,
                             content_image = args.content_image)
