@@ -67,21 +67,21 @@ class AdaIN(Layer):
 
 
 import numpy as np
-def preprocess_symbolic_input(x, data_format, mode):
-    _IMAGENET_MEAN = None
+def preprocess_symbolic_input(x, data_format, mode, IMAGENET_MEAN=None):
+    IMAGENET_MEAN = None
 
     if mode == 'tf':
         x /= 127.5
         x -= 1.
         return x
 
-    if _IMAGENET_MEAN is None:
-        _IMAGENET_MEAN = K.constant(-np.array([103.939, 116.779, 123.68]))
+    if IMAGENET_MEAN is None:
+        IMAGENET_MEAN = K.constant(-np.array([103.939, 116.779, 123.68]))
     # Zero-center by mean pixel
-    if K.dtype(x) != K.dtype(_IMAGENET_MEAN):
-        x = K.bias_add(x, K.cast(_IMAGENET_MEAN, K.dtype(x)), data_format)
+    if K.dtype(x) != K.dtype(IMAGENET_MEAN):
+        x = K.bias_add(x, K.cast(IMAGENET_MEAN, K.dtype(x)), data_format)
     else:
-        x = K.bias_add(x, _IMAGENET_MEAN, data_format)
+        x = K.bias_add(x, IMAGENET_MEAN, data_format)
 
     if data_format == 'channels_first':
         # 'RGB'->'BGR'

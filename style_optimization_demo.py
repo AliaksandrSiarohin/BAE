@@ -3,7 +3,7 @@ from scipy.special import logit
 from skimage.io import imread, imsave
 import os
 
-from memorability_evaluation import MemorabilityScorer
+from evaluation import Scorer
 from mixer import ChainMix
 from cmd import parse_args
 
@@ -38,14 +38,15 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    generated_images = mixer.run(img, verbose=True)
+    generated_images, _ = mixer.run(img, verbose=True)
 
-    if args.score_type == 'mem':
-        mem_scorer = MemorabilityScorer()
-        initial_image_score = mem_scorer.compute_memorability_external([img])
-        print ("Initial image memorability %s" % (initial_image_score, ))
+    if args.score_type == 'mem' or args.score_type == 'aes':
+        scorer = Scorer(args.score_type)
+        initial_image_score = scorer.compute_external([img])
 
-        scores = mem_scorer.compute_memorability_internal(generated_images)
+        print ("Initial image score %s" % (initial_image_score, ))
+
+        scores = scorer.compute_internal(generated_images)
         for i, image in enumerate(generated_images):
             img_path = os.path.join(args.output_dir, 'img%s.jpg') % i
             imsave(img_path, image)

@@ -9,13 +9,10 @@ import pandas as pd
 from cmd import parse_args
 from skimage.transform import resize
 
-from losses import get_image_memorability
+from losses import get_image_memorability, get_image_aesthetics
 from style_transfer_model import preprocess_input, style_transfer_model, deprocess_input
 
-#import gan.train
-
 import keras.backend as K
-#assert K.image_data_format() == 'channels_last', "Backend should be tensorflow and data_format channel_last"
 from keras.backend import tf as ktf
 config = ktf.ConfigProto()
 config.gpu_options.allow_growth = True
@@ -23,20 +20,29 @@ session = ktf.Session(config=config)
 K.set_session(session)
 
 
-class MemorabilityScorer(object):
-    def __init__(self, mem_external='models/mem_external.h5', mem_internal='models/mem_internal.h5'):
+class Scorer(object):
+    def __init__(self, score_type):
+        assert score_type in ['aes', 'mem']
+        if score_type == 'mem':
+            external = 'models/mem_external.h5'
+            internal = 'models/mem_internal.h5'
+            score_fun = get_image_memorability
+        else:
+            external = 'models/ava1.h5'
+            internal = 'models/ava1.h5'
+            score_fun = get_image_aesthetics
         image = K.placeholder(shape=(1, 3, None, None))
-        self.f_external = K.function([image, K.learning_phase()], [get_image_memorability(image=image, memnet=mem_external)])
-        self.f_internal = K.function([image, K.learning_phase()], [get_image_memorability(image=image, memnet=mem_internal)])
+        self.f_external = K.function([image, K.learning_phase()], [score_fun(image=image, net=external)])
+        self.f_internal = K.function([image, K.learning_phase()], [score_fun(image=image, net=internal)])
 
-    def compute_memorability_external(self, images):
+    def compute_external(self, images):
         scores = []
         for image in images:
             img_pr = preprocess_input(image)
             scores.append(np.squeeze(self.f_external([img_pr, 0])[0]))
         return np.array(scores)
 
-    def compute_memorability_internal(self, images):
+    def compute_internal(self, images):
         scores = []
         for image in images:
             img_pr = preprocess_input(image)
@@ -94,7 +100,7 @@ def generate_all_images(args, scores_file, type):
     with open(content_images_names_file) as f:
         content_images_names = f.read().split('\n')
 
-    mem_scorer = MemorabilityScorer(args.external_scorer, args.internal_scorer)
+    scorer = Scorer(score_type=args.score_type)
 
     if type == 'chain':
         mixer = ChainMix(args)
@@ -120,10 +126,10 @@ def generate_all_images(args, scores_file, type):
         else:
             generated_images, style_names, alphas = baseline_generation(img, model, args.styles_images_dir, args.alpha_mean)
 
-        initial_memorability = mem_scorer.compute_memorability_external([img])[0]
+        initial_memorability = scorer.compute_external([img])[0]
 
-        external_scores = mem_scorer.compute_memorability_external(generated_images)
-        internal_scores = mem_scorer.compute_memorability_internal(generated_images)
+        external_scores = scorer.compute_external(generated_images)
+        internal_scores = scorer.compute_internal(generated_images)
 
 
         content_names = np.repeat(content_image, repeats=len(external_scores))

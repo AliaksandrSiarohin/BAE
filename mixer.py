@@ -65,8 +65,6 @@ class ChainMix(object):
             raw_image = self.st([self.gd.current, 0, content_image])[0]
             alpha = self.args.alpha_mean if self.args.alpha_sigma == 0 else self.gd.current[-1]
             alphas.append(alpha)
-#            print alpha
-#            print oracle(self.gd.current)[0]
             processed_image = deprocess_input(raw_image)
             generated_images.append(processed_image)
             self.gd.update()

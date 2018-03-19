@@ -21,13 +21,13 @@ def parse_args():
     parser.add_argument("--lr", type=float, default=0.1,
          help="Learning rate for Gradient Accent, tao for Langevein Dynamycs, transition var for MetropolisHastings")
     parser.add_argument("--optimizer", type=str, default='langevin', choices=['grad', 'langevin', 'hamiltonyan', 'mh'])
-    parser.add_argument("--content_image", default='dataset/tmp/model.png')
+    parser.add_argument("--content_image", default='cornell_cropped.jpg')
 
     parser.add_argument("--output_dir", default='output/memorability-evaluation-adaptive_alpha')
     parser.add_argument("--display_ratio", type=int, default=1)
     parser.add_argument("--ham_iters", type=int, default=3)
-    parser.add_argument("--number_of_iters", type=int, default=500)
-    parser.add_argument("--score_type", choices=['blue', 'mem'], default='mem',
+    parser.add_argument("--number_of_iters", type=int, default=20)
+    parser.add_argument("--score_type", choices=['blue', 'mem', 'aes'], default='mem',
                         help="Score type 'blue' is making image more blue, 'mem' - make an image more memoreble")
     parser.add_argument("--weight_image", type=float, default=100, help='Weight of the image score')
 
@@ -35,8 +35,8 @@ def parse_args():
     parser.add_argument("--content_images_names_file", default='dataset/memorability_test_images.txt', help="File with content image names")
     # parser.add_argument("--content_images_folder", default='dataset/tmp', help="Content images for evaluation")
     # parser.add_argument("--content_images_names_file", default='dataset/tmp.txt', help="File with content image names")
-    parser.add_argument("--external_scorer", default='models/mem_external.h5', help='External memorability scorer')
-    parser.add_argument("--internal_scorer", default='models/mem_internal.h5', help="Internal memorability scorer")
+    # parser.add_argument("--external_scorer", default='models/mem_external.h5', help='External memorability scorer')
+    # parser.add_argument("--internal_scorer", default='models/mem_internal.h5', help="Internal memorability scorer")
     parser.add_argument("--styles_images_dir", default='dataset/devian_art',
                                         help='Directory with styles for baseline evaluation')
 
