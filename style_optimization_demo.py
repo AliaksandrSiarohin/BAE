@@ -35,8 +35,8 @@ def main():
     mixer = ChainMix(args)
 
     mixer.compile()
-    if not os.path.exists(args.samples_dir):
-        os.makedirs(args.samples_dir)
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
 
     generated_images = mixer.run(img, verbose=True)
 

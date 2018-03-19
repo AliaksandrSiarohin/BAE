@@ -12,6 +12,17 @@ from skimage.transform import resize
 from losses import get_image_memorability
 from style_transfer_model import preprocess_input, style_transfer_model, deprocess_input
 
+#import gan.train
+
+import keras.backend as K
+#assert K.image_data_format() == 'channels_last', "Backend should be tensorflow and data_format channel_last"
+from keras.backend import tf as ktf
+config = ktf.ConfigProto()
+config.gpu_options.allow_growth = True
+session = ktf.Session(config=config)
+K.set_session(session)
+
+
 class MemorabilityScorer(object):
     def __init__(self, mem_external='models/mem_external.h5', mem_internal='models/mem_internal.h5'):
         image = K.placeholder(shape=(1, 3, None, None))
@@ -40,28 +51,30 @@ def save_images(out_folder, generated_images, names):
         imsave(os.path.join(out_folder, names[i]), image)
 
 
-def scores_to_df(initial_memorability, external_scores, internal_scores, style_names, content_names):
+def scores_to_df(initial_memorability, external_scores, internal_scores, style_names, content_names, alphas):
     d = {'external_scores': external_scores,
          'internal_scores': internal_scores,
          'style_names': style_names,
          'content_names': content_names,
-         'gaps': external_scores - initial_memorability}
+         'gaps': external_scores - initial_memorability,
+         'alpha': alphas}
     return pd.DataFrame(data=d)
 
 
 def chain_generation(img, mixer, seed):
-    generated_images = mixer.run(img, verbose=False, seed=seed)
+    generated_images, alphas = mixer.run(img, verbose=False, seed=seed)
     style_names = map(str, range(len(generated_images)))
     style_names = map(lambda x: x + '.jpg', style_names)
 
-    return generated_images, style_names
+    return generated_images, style_names, alphas
 
-def baseline_generation(img, model, styles_images_dir):
+
+def baseline_generation(img, model, styles_images_dir, alpha):
     img_content = resize(img, (256, 256), preserve_range=True)
     img_content = preprocess_input(img_content)
 
     generated_images = []
-    style_names = os.listdir(styles_images_dir)[:3]
+    style_names = os.listdir(styles_images_dir)
     for style_name in style_names:
         img_style = imread(os.path.join(styles_images_dir, style_name))
         img_style = resize(img_style, (256, 256), preserve_range=True)
@@ -69,7 +82,7 @@ def baseline_generation(img, model, styles_images_dir):
 
         res = model.predict([img_content, img_style])
         generated_images.append(deprocess_input(res))
-    return generated_images, style_names
+    return generated_images, style_names, alpha * np.ones(len(generated_images))
 
 
 def generate_all_images(args, scores_file, type):
@@ -87,7 +100,9 @@ def generate_all_images(args, scores_file, type):
         mixer = ChainMix(args)
         mixer.compile()
     else:
-        model = style_transfer_model()
+        model = style_transfer_model(alpha=args.alpha_mean,
+                                     decoder=args.decoder,
+                                     encoder=args.encoder)
 
     for i, content_image in tqdm(list(enumerate(content_images_names))):
         if content_image.strip() == '':
@@ -101,9 +116,9 @@ def generate_all_images(args, scores_file, type):
         img = imread(os.path.join(content_images_folder, content_image))
 
         if type == 'chain':
-            generated_images, style_names = chain_generation(img, mixer, seed=i)
+            generated_images, style_names, alphas = chain_generation(img, mixer, seed=i)
         else:
-            generated_images, style_names = baseline_generation(img, model, args.styles_images_dir)
+            generated_images, style_names, alphas = baseline_generation(img, model, args.styles_images_dir, args.alpha_mean)
 
         initial_memorability = mem_scorer.compute_memorability_external([img])[0]
 
@@ -111,10 +126,9 @@ def generate_all_images(args, scores_file, type):
         internal_scores = mem_scorer.compute_memorability_internal(generated_images)
 
 
-
         content_names = np.repeat(content_image, repeats=len(external_scores))
 
-        df = scores_to_df(initial_memorability, external_scores, internal_scores, style_names, content_names)
+        df = scores_to_df(initial_memorability, external_scores, internal_scores, style_names, content_names, alphas)
         save_images(out_dir, generated_images, style_names)
 
         f_name = os.path.join(args.output_dir, scores_file)

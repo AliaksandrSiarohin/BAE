@@ -8,22 +8,12 @@ from keras import backend as K
 from skimage.color import gray2rgb
 
 
-def style_transfer_gan(encoder='models/vgg_normalised.h5', decoder='models/decoder.h5',
-                         style_generator='output/pen_ink_ch/epoch_1999_generator.h5',
-                         alpha=0.5, z_style_shape=(64, ), image_shape=(3, 256, 256)):
-    from keras import backend as K
-
+def style_transfer_gan(alpha, z_style, image,
+                       encoder='models/vgg_normalised.h5', decoder='models/decoder.h5',
+                       style_generator='output/pen_ink_ch/epoch_1999_generator.h5'):
     K.set_image_data_format('channels_first')
 
-    vgg = load_model(encoder, custom_objects={'ReflectionPad': ReflectionPad}, compile=False)
-    outputs_dict = dict([(layer.name, layer.output) for layer in vgg.layers])
-    y = outputs_dict['Threshold_30']
-
-    encoder = Model(inputs=vgg.input, outputs=y, name='vgg16')
-    encoder.trainable = False
-
-    image = Input(image_shape)
-    z_style = Input(z_style_shape)
+    encoder = get_encoder(encoder)
 
     style_generator = load_model(style_generator, compile=False)
     style_generator.name = 'style_generator'
@@ -36,17 +26,17 @@ def style_transfer_gan(encoder='models/vgg_normalised.h5', decoder='models/decod
     f_image = encoder(image)
 
     re_norm_image = AdaIN()([f_image, m, v])
-
+    
+    if type(alpha) != float:
+        alpha = K.clip(alpha, 0, 1)
     re_norm_image = Lambda(lambda inputs: alpha * inputs[0] + (1 - alpha) * inputs[1])([f_image, re_norm_image])
 
-    decoder = load_model(decoder, custom_objects={'ReflectionPad':ReflectionPad})
-    decoder.trainable = False
+    decoder = get_decoder(decoder)
     out = decoder(re_norm_image)
 
     out = Lambda(lambda x: K.clip(x, 0, 1))(out)
-    st_model = Model(inputs=[image, z_style], outputs=[out], name='style_transfer_model')
 
-    return st_model
+    return out
 
 
 def get_encoder(encoder='models/vgg_normalised.h5'):
@@ -67,7 +57,7 @@ def get_decoder(decoder='models/decoder.h5'):
     return decoder
 
 
-def style_transfer_model(encoder='models/vgg_normalised.h5', decoder='models/decoder.h5'):
+def style_transfer_model(alpha=0.5, encoder='models/vgg_normalised.h5', decoder='models/decoder.h5'):
     encoder = get_encoder(encoder)
 
     image, style = Input((3, None, None)), Input((3, None, None))
@@ -76,6 +66,7 @@ def style_transfer_model(encoder='models/vgg_normalised.h5', decoder='models/dec
     f_style = encoder(style)
 
     re_norm_image = AdaIN()([f_image, f_style])
+    re_norm_image = Lambda(lambda inputs: alpha * inputs[0] + (1 - alpha) * inputs[1])([f_image, re_norm_image])
 
     decoder = get_decoder(decoder)
     out = decoder(re_norm_image)
