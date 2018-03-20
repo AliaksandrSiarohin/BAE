@@ -68,8 +68,6 @@ class AdaIN(Layer):
 
 import numpy as np
 def preprocess_symbolic_input(x, data_format, mode, IMAGENET_MEAN=None):
-    IMAGENET_MEAN = None
-
     if mode == 'tf':
         x /= 127.5
         x -= 1.

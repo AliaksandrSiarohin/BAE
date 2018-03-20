@@ -40,7 +40,6 @@ class MetropolisHastingsMCMC(object):
 
     def update(self):
         accepted = False
-
         while not accepted:
             new = self.transition()
             new_value = self.oracle(new)

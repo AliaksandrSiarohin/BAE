@@ -38,8 +38,8 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    generated_images, _ = mixer.run(img, verbose=True)
-
+    generated_images, alphas = mixer.run(img, verbose=True)
+    print alphas
     if args.score_type == 'mem' or args.score_type == 'aes':
         scorer = Scorer(args.score_type)
         initial_image_score = scorer.compute_external([img])

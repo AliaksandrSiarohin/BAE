@@ -61,7 +61,7 @@ def get_image_aesthetics(image, net='models/ava1.h5', ava1_mean=True):
                                       IMAGENET_MEAN=IMAGENET_MEAN)
 
     score = ilgnet(image)
-    return score[1]
+    return score[:, 1]
 
 
 def get_score(stylized_image, z_style, alpha, alpha_mean=0.5, alpha_sigma=0,
