@@ -10,7 +10,7 @@ def parse_args():
     parser.add_argument("--style_generator", default='output/devian_art/epoch_9999_generator.h5',
                         help="Path to generator trained using style_gan_train.py")
 
-    parser.add_argument("--alpha_sigma", type=float, default=0.25, help="How much style of content image to preserve."
+    parser.add_argument("--alpha_sigma", type=float, default=float('inf'), help="How much style of content image to preserve."
                                                                        "Std value, set to zero if not used.")
     parser.add_argument("--alpha_mean", type=float, default=0.5, help="How much style of content image to preserve."
                                                                       "Mean value.")
@@ -22,6 +22,8 @@ def parse_args():
          help="Learning rate for Gradient Accent, tao for Langevein Dynamycs, transition var for MetropolisHastings")
     parser.add_argument("--optimizer", type=str, default='langevin', choices=['grad', 'langevin', 'hamiltonyan', 'mh'])
     parser.add_argument("--content_image", default='cornell_cropped.jpg')
+    parser.add_argument("--adaptive_grad", default=1, type=int, help="Divide gradient by moving average square norm."
+                                                                     " Can be userfull for adaptive alpha")
 
     parser.add_argument("--output_dir", default='output/memorability-evaluation-adaptive_alpha')
     parser.add_argument("--display_ratio", type=int, default=1)

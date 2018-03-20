@@ -46,6 +46,7 @@ class MetropolisHastingsMCMC(object):
             alpha = self.compute_alpha(new, new_value)
             th = np.random.uniform(0, 1)
             if alpha > th:
+                print new_value[1]
                 accepted = True
                 self.current = new
                 self.current_value = new_value

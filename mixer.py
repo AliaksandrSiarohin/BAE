@@ -33,8 +33,15 @@ class ChainMix(object):
 
         grad = K.gradients(K.sum(score), z_style_and_alpha)
 
+        updates = []
+        if self.args.adaptive_grad:
+            moving_average_sq_grad = K.ones(K.int_shape(grad[0]))
+            squpdate = K.moving_average_update(moving_average_sq_grad, grad[0] ** 2, 0.99)
+            updates.append(squpdate)
+            grad /= K.sqrt(moving_average_sq_grad)
+
         self.f = K.function(inputs=[z_style_and_alpha, K.learning_phase(), img_tensor],
-                            outputs=[K.sum(score), grad[0]])
+                            outputs=[K.sum(score), grad[0]], updates=updates)
 
         self.st = K.function(inputs=[z_style_and_alpha, K.learning_phase(), img_tensor],
                              outputs=[stylized_image])
