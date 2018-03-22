@@ -49,9 +49,9 @@ def get_image_aesthetics(image, net='models/ava1.h5', ava1_mean=True):
     ilgnet = load_model(net, custom_objects={'LRN': LRN}, compile=True)
 
     if not ava1_mean:
-        IMAGENET_MEAN = K.constant(-np.array([90.05038554687053, 98.58527740451973, 107.50910979753826]))
+        IMAGENET_MEAN = K.constant(-np.array([90.05038554687053, 98.58527740451973, 107.50910979753826])[::-1])
     else:
-        IMAGENET_MEAN = K.constant(-np.array([91.00178961467464, 99.46385127608664, 107.8456162486691]))
+        IMAGENET_MEAN = K.constant(-np.array([91.00178961467464, 99.46385127608664, 107.8456162486691])[::-1])
 
     image *= 255
     image = ktf.transpose(image, [0, 2, 3, 1])
