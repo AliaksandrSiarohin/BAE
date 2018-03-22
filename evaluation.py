@@ -145,28 +145,31 @@ def generate_all_images(args, scores_file, type):
             with open(f_name, 'a') as f:
                 df.to_csv(f, index=False, header=False)
 
-def compute_top_score(df, top=5):
+def compute_top_score(df, top=5, use_internal = True):
     scores = []
+    field = 'internal_scores' if use_internal else 'external_scores' 
     for content in np.unique(df['content_names']):
-        external_scores = np.array(df[df['content_names'] == content]['external_scores'])
+        internal_scores = np.array(df[df['content_names'] == content][field])
         gaps = np.array(df[df['content_names'] == content]['gaps'])
-        sorted = np.argsort(external_scores)[::-1]
+        sorted = np.argsort(internal_scores)[::-1]
         scores.append(np.mean(gaps[sorted][:top]))
     return np.mean(scores)
 
 if __name__ == "__main__":
     tops = [1, 5, 10]
     args = parse_args()
+    pr_name = ['external', 'internal']
     if args.optimizer is not None:
         generate_all_images(args=args, scores_file='chain_scores_dataframe.csv', type='chain')
         df = pd.read_csv(os.path.join(args.output_dir, 'chain_scores_dataframe.csv'))
         for top in tops:
-            print ("Generated scores top %s: %s" % (top, compute_top_score(df, top)))
+            for use_internal in [True, False]:
+            	print ("Generated scores top %s (%s): %s" % (top, pr_name[use_internal], compute_top_score(df, top, use_internal)))
     
     if args.optimizer is None:
         generate_all_images(args=args, scores_file='baseline_scores_dataframe.csv', type='baseline')
         df = pd.read_csv(os.path.join(args.output_dir,'baseline_scores_dataframe.csv'))
         for top in tops:
-            print ("Baseline scores top %s: %s" % (top, compute_top_score(df, top)))
-
-
+            for use_internal in [True, False]:
+            	print ("Generated scores top %s (%s): %s" % (top, pr_name[use_internal], compute_top_score(df, top, use_internal)))
+ 
