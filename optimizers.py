@@ -40,13 +40,14 @@ class MetropolisHastingsMCMC(object):
 
     def update(self):
         accepted = False
+#        print self.current_value[1]
         while not accepted:
             new = self.transition()
             new_value = self.oracle(new)
+#            print new_value[1]
             alpha = self.compute_alpha(new, new_value)
             th = np.random.uniform(0, 1)
             if alpha > th:
-                print new_value[1]
                 accepted = True
                 self.current = new
                 self.current_value = new_value

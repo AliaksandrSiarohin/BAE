@@ -47,6 +47,7 @@ def main():
         print ("Initial image score %s" % (initial_image_score, ))
 
         scores = scorer.compute_internal(generated_images)
+        print scores
         for i, image in enumerate(generated_images):
             img_path = os.path.join(args.output_dir, 'img%s.jpg') % i
             imsave(img_path, image)

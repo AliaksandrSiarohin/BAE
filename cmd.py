@@ -20,9 +20,9 @@ def parse_args():
                         help="Shape of the resulting image")
     parser.add_argument("--lr", type=float, default=0.1,
          help="Learning rate for Gradient Accent, tao for Langevein Dynamycs, transition var for MetropolisHastings")
-    parser.add_argument("--optimizer", type=str, default='langevin', choices=['grad', 'langevin', 'hamiltonyan', 'mh'])
+    parser.add_argument("--optimizer", type=str, default='langevin', choices=['grad', 'langevin', 'hamiltonyan', 'mh', 'baseline'])
     parser.add_argument("--content_image", default='cornell_cropped.jpg')
-    parser.add_argument("--adaptive_grad", default=1, type=int, help="Divide gradient by moving average square norm."
+    parser.add_argument("--adaptive_grad", default=0, type=int, help="Divide gradient by moving average square norm."
                                                                      " Can be userfull for adaptive alpha")
 
     parser.add_argument("--output_dir", default='output/memorability-evaluation-adaptive_alpha')
@@ -45,7 +45,8 @@ def parse_args():
     args = parser.parse_args()
 
     optimizers = {'grad': GradientAccent, 'langevin': LangevinMCMC,
-                  'mh': MetropolisHastingsMCMC, 'hamiltonyan': partial(HamiltonyanMCMC, L=args.ham_iters)}
+                  'mh': MetropolisHastingsMCMC, 'hamiltonyan': partial(HamiltonyanMCMC, L=args.ham_iters),
+                  'baseline': None}
     args.optimizer = optimizers[args.optimizer]
 
     return args
