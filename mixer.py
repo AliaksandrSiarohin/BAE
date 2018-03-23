@@ -60,7 +60,7 @@ class ChainMix(object):
         oracle = lambda z: self.f([z, 0, content_image])
         if seed is not None:
             np.random.seed(seed)
-        self.gd = self.args.optimizer(oracle, self.args.lr)
+        self.gd = self.args.optimizer(oracle, self.args.lr, self.args.lr_decay)
         z_init = np.random.normal(size=self.args.z_style_dim)
         alpha_init = np.array([self.args.alpha_mean])
 

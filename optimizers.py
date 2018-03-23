@@ -22,9 +22,10 @@ class GradientAccent(object):
 
 
 class MetropolisHastingsMCMC(object):
-    def __init__(self, oracle, transition_var=1):
+    def __init__(self, oracle, lr=0.1, lr_decay=1):
         self.oracle = oracle
-        self.transition_var = transition_var
+        self.lr = lr
+        self.lr_decay = lr_decay
         self.number_of_steps = 0
 
     def initialize(self, initialization):
@@ -32,7 +33,7 @@ class MetropolisHastingsMCMC(object):
         self.current_value = self.oracle(self.current)
 
     def transition(self):
-        return multivariate_normal(mean=self.current, cov=self.transition_var).rvs(size=(1, ))
+        return multivariate_normal(mean=self.current, cov=self.lr).rvs(size=(1, ))
 
     def compute_alpha(self, new, new_value):
         symmetric_part = np.exp(new_value[0] - self.current_value[0])
@@ -41,52 +42,51 @@ class MetropolisHastingsMCMC(object):
     def update(self):
         accepted = False
 #        print self.current_value[1]
+        old_lr = self.lr
         while not accepted:
             new = self.transition()
             new_value = self.oracle(new)
-#            print new_value[1]
             alpha = self.compute_alpha(new, new_value)
             th = np.random.uniform(0, 1)
+            self.lr *= self.lr_decay
             if alpha > th:
                 accepted = True
                 self.current = new
                 self.current_value = new_value
             self.number_of_steps += 1
-
+        self.lr = old_lr
         return self.current_value[0]
 
 
 class LangevinMCMC(MetropolisHastingsMCMC):
-    def __init__(self, oracle, tao=0.1):
-        super(LangevinMCMC, self).__init__(oracle)
-        self.tao = tao
+    def __init__(self, oracle, lr=0.1, lr_decay=1):
+        super(LangevinMCMC, self).__init__(oracle, lr)
 
     def transition(self):
         noise = multivariate_normal(mean=np.zeros_like(self.current), cov=1).rvs(size=(1, ))
-        return self.current + self.tao * self.current_value[1] + np.sqrt(2 * self.tao) * noise
+        return self.current + self.lr * self.current_value[1] + np.sqrt(2 * self.lr) * noise
 
     def proposal_a_given_b(self, a, b, a_value, b_value):
-        val = a - b - self.tao * b_value[1]
-        return np.exp(-np.sum(val ** 2)/(4 * self.tao))
+        val = a - b - self.lr * b_value[1]
+        return -np.sum(val ** 2)/(4 * self.lr)
 
     def compute_alpha(self, new, new_value):
         symmetric_part = np.exp(new_value[0] - self.current_value[0])
-        assymetric_part = (self.proposal_a_given_b(self.current, new, self.current_value, new_value) /
-                           self.proposal_a_given_b(new, self.current, new_value, self.current_value))
+        assymetric_part = np.exp(self.proposal_a_given_b(self.current, new, self.current_value, new_value) -
+                                 self.proposal_a_given_b(new, self.current, new_value, self.current_value))
         return min(1, symmetric_part * assymetric_part)
 
 
 class HamiltonyanMCMC(MetropolisHastingsMCMC):
-    def __init__(self, oracle, epsilon, L=10):
-        super(HamiltonyanMCMC, self).__init__(oracle)
+    def __init__(self, oracle, lr=0.1, lr_decay=1, L=10):
+        super(HamiltonyanMCMC, self).__init__(oracle, lr, lr_decay)
         self.L = L
-        self.epsilon = epsilon
 
     def transition(self):
         q = self.current.copy()
         p = np.random.normal(size=self.current.shape)
         current_p = p.copy()
-        p += self.epsilon * self.current_value[1] / 2
+        p += self.lr * self.current_value[1] / 2
 
         for i in range(self.L):
             q += self.epsilon * p
@@ -94,7 +94,7 @@ class HamiltonyanMCMC(MetropolisHastingsMCMC):
                 p += self.epsilon * self.oracle(q)[1]
 
         new_value = self.oracle(q)
-        p += self.epsilon * new_value[1] / 2
+        p += self.lr * new_value[1] / 2
 
         proposed_u = -new_value[0]
         current_u = -self.current_value[0]
@@ -106,15 +106,18 @@ class HamiltonyanMCMC(MetropolisHastingsMCMC):
 
     def update(self):
         accepted = False
-
+        
+        old_lr = self.lr
         while not accepted:
             new, new_value,  alpha = self.transition()
             th = np.random.uniform(0, 1)
+            self.lr *= self.lr_decay
             if alpha > th:
                 accepted = True
                 self.current = new
                 self.current_value = new_value
             self.number_of_steps += 1
+        seld.lr = old_lr        
 
         return self.current_value[0]
 

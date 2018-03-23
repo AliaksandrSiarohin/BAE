@@ -20,6 +20,9 @@ def parse_args():
                         help="Shape of the resulting image")
     parser.add_argument("--lr", type=float, default=0.1,
          help="Learning rate for Gradient Accent, tao for Langevein Dynamycs, transition var for MetropolisHastings")
+    parser.add_argument("--lr_decay", type=float, default=1, help="Multiple lr by this on fail")
+ 
+
     parser.add_argument("--optimizer", type=str, default='langevin', choices=['grad', 'langevin', 'hamiltonyan', 'mh', 'baseline'])
     parser.add_argument("--content_image", default='cornell_cropped.jpg')
     parser.add_argument("--adaptive_grad", default=0, type=int, help="Divide gradient by moving average square norm."
