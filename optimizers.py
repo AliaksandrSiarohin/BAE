@@ -87,11 +87,10 @@ class HamiltonyanMCMC(MetropolisHastingsMCMC):
         p = np.random.normal(size=self.current.shape)
         current_p = p.copy()
         p += self.lr * self.current_value[1] / 2
-
         for i in range(self.L):
-            q += self.epsilon * p
+            q += self.lr * p
             if i != self.L - 1:
-                p += self.epsilon * self.oracle(q)[1]
+                p += self.lr * self.oracle(q)[1]
 
         new_value = self.oracle(q)
         p += self.lr * new_value[1] / 2
@@ -102,6 +101,7 @@ class HamiltonyanMCMC(MetropolisHastingsMCMC):
         proposed_k = np.sum(p ** 2) / 2
 
         alpha = np.exp(current_u - proposed_u + current_k - proposed_k)
+
         return q, new_value, alpha
 
     def update(self):
@@ -117,7 +117,7 @@ class HamiltonyanMCMC(MetropolisHastingsMCMC):
                 self.current = new
                 self.current_value = new_value
             self.number_of_steps += 1
-        seld.lr = old_lr        
+        self.lr = old_lr
 
         return self.current_value[0]
 
@@ -126,9 +126,9 @@ if __name__ == "__main__":
     from tqdm import tqdm
     oracle = lambda x: (np.log(multivariate_normal(mean=[5, 5], cov=[[1, 0], [0, 1]]).pdf(x)), -(x - 5))
     #log_grad_density = lambda x:
-    mcmc = HamiltonyanMCMC(oracle, 0.1)
+    mcmc = HamiltonyanMCMC(oracle, 0.1, 0.9)
 
-    mcmc.initialize(np.array([5.0, 5.0]))
+    mcmc.initialize(np.array([50.0, 50.0]))
     values = []
 
     for i in tqdm(range(1000)):
