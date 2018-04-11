@@ -40,7 +40,7 @@ def main():
 
     generated_images, alphas = mixer.run(img, verbose=True)
     print alphas
-    if args.score_type == 'mem' or args.score_type == 'aes':
+    if args.score_type != 'blue':
         scorer = Scorer(args.score_type)
         initial_image_score = scorer.compute_external([img])
 

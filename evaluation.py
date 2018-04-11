@@ -9,7 +9,7 @@ import pandas as pd
 from cmd import parse_args
 from skimage.transform import resize
 
-from losses import get_image_memorability, get_image_aesthetics
+from losses import get_image_memorability, get_image_aesthetics, get_image_emotion
 from style_transfer_model import preprocess_input, style_transfer_model, deprocess_input
 
 import keras.backend as K
@@ -22,15 +22,20 @@ K.set_session(session)
 
 class Scorer(object):
     def __init__(self, score_type):
-        assert score_type in ['aes', 'mem']
+        assert score_type in ['aes', 'mem', 'scary', 'gloomy']
         if score_type == 'mem':
             external = 'models/mem_external.h5'
             internal = 'models/mem_internal.h5'
             score_fun = get_image_memorability
-        else:
-            external = 'models/ava1.h5'
-            internal = 'models/ava1.h5'
+        elif score_type == 'aes':
+            external = 'models/ava2.h5'
+            internal = 'models/ava2.h5'
             score_fun = get_image_aesthetics
+        else:
+            external = 'models/%s_external.h5' % score_type
+            internal = 'models/%s_internal.h5' % score_type
+            score_fun = get_image_emotion
+ 
         image = K.placeholder(shape=(1, 3, None, None))
         self.f_external = K.function([image, K.learning_phase()], [score_fun(image=image, net=external)])
         self.f_internal = K.function([image, K.learning_phase()], [score_fun(image=image, net=internal)])

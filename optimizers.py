@@ -60,7 +60,7 @@ class MetropolisHastingsMCMC(object):
 
 class LangevinMCMC(MetropolisHastingsMCMC):
     def __init__(self, oracle, lr=0.1, lr_decay=1):
-        super(LangevinMCMC, self).__init__(oracle, lr)
+        super(LangevinMCMC, self).__init__(oracle, lr, lr_decay)
 
     def transition(self):
         noise = multivariate_normal(mean=np.zeros_like(self.current), cov=1).rvs(size=(1, ))

@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument("--display_ratio", type=int, default=1)
     parser.add_argument("--ham_iters", type=int, default=3)
     parser.add_argument("--number_of_iters", type=int, default=20)
-    parser.add_argument("--score_type", choices=['blue', 'mem', 'aes'], default='mem',
+    parser.add_argument("--score_type", choices=['blue', 'mem', 'aes', 'scary', 'gloomy'], default='mem',
                         help="Score type 'blue' is making image more blue, 'mem' - make an image more memoreble")
     parser.add_argument("--weight_image", type=float, default=100, help='Weight of the image score')
 
