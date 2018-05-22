@@ -39,7 +39,7 @@ def main():
         os.makedirs(args.output_dir)
 
     generated_images, alphas = mixer.run(img, verbose=True)
-    print alphas
+    #print alphas
     if args.score_type != 'blue':
         scorer = Scorer(args.score_type)
         initial_image_score = scorer.compute_external([img])
@@ -47,7 +47,7 @@ def main():
         print ("Initial image score %s" % (initial_image_score, ))
 
         scores = scorer.compute_internal(generated_images)
-        print scores
+        print ("Maximum score is at img%s.jpg" % np.argmax(scores))
         for i, image in enumerate(generated_images):
             img_path = os.path.join(args.output_dir, 'img%s.jpg') % i
             imsave(img_path, image)

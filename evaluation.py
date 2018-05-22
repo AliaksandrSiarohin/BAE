@@ -22,7 +22,7 @@ K.set_session(session)
 
 class Scorer(object):
     def __init__(self, score_type):
-        assert score_type in ['aes', 'mem', 'scary', 'gloomy']
+        assert score_type in ['aes', 'mem', 'scary', 'gloomy', 'happy', 'peaceful']
         if score_type == 'mem':
             external = 'models/mem_external.h5'
             internal = 'models/mem_internal.h5'
@@ -136,7 +136,6 @@ def generate_all_images(args, scores_file, type):
         external_scores = scorer.compute_external(generated_images)
         internal_scores = scorer.compute_internal(generated_images)
 
-
         content_names = np.repeat(content_image, repeats=len(external_scores))
 
         df = scores_to_df(initial_memorability, external_scores, internal_scores, style_names, content_names, alphas)
@@ -149,6 +148,7 @@ def generate_all_images(args, scores_file, type):
         else:
             with open(f_name, 'a') as f:
                 df.to_csv(f, index=False, header=False)
+
 
 def compute_top_score(df, top=5, use_internal = True):
     scores = []
@@ -169,12 +169,12 @@ if __name__ == "__main__":
         df = pd.read_csv(os.path.join(args.output_dir, 'chain_scores_dataframe.csv'))
         for top in tops:
             for use_internal in [True, False]:
-            	print ("Generated scores top %s (%s): %s" % (top, pr_name[use_internal], compute_top_score(df, top, use_internal)))
+                print ("Generated scores top %s (%s): %s" % (top, pr_name[use_internal], compute_top_score(df, top, use_internal)))
     
     if args.optimizer is None:
         generate_all_images(args=args, scores_file='baseline_scores_dataframe.csv', type='baseline')
         df = pd.read_csv(os.path.join(args.output_dir,'baseline_scores_dataframe.csv'))
         for top in tops:
             for use_internal in [True, False]:
-            	print ("Generated scores top %s (%s): %s" % (top, pr_name[use_internal], compute_top_score(df, top, use_internal)))
+                print ("Generated scores top %s (%s): %s" % (top, pr_name[use_internal], compute_top_score(df, top, use_internal)))
  
