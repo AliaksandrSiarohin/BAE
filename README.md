@@ -33,7 +33,9 @@
 
 2. Launch
 
-```python style_optimization_demo.py --image_shape 3,512,512 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9 --score_type gloomy --number_of_iters 100 --alpha_sigma 0.25 --output_dir output/cornell_gloomy --content_image sup-mat/cornell_cropped.jpg```
+```
+python style_optimization_demo.py --image_shape 3,512,512 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9 --score_type gloomy --number_of_iters 100 --alpha_sigma 0.25 --output_dir output/cornell_gloomy --content_image sup-mat/cornell_cropped.jpg
+```
 
 Check ```cmp.py``` for explanation of the command line arguments.
 
@@ -49,15 +51,21 @@ In this project 3 dataset are used:
 
 For downloading images use command:
 
-```python dataset/download_art_images.py --category emotion_scary```
+```
+python dataset/download_art_images.py --category emotion_scary
+```
 
 Filter the images:
 
-```python dataset/filter_corrupted_images.py --folder dataset/emotion_scary```
+```
+python dataset/filter_corrupted_images.py --folder dataset/emotion_scary
+```
 
 Split in 2 datasets:
 
-```python dataset/split_dataset.py --folder dataset/emotion_scary```
+```
+python dataset/split_dataset.py --folder dataset/emotion_scary
+```
 
 
 ### Evaluation
@@ -65,27 +73,39 @@ Evaluation is the most time consuming part.
 
 For baseline evaluation scary:
 
-```python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_baseline --method baseline --content_images_folder /path/to/lamem/dataset```
+```
+python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_baseline --method baseline --content_images_folder /path/to/lamem/dataset
+```
 
 For baseline evaluation memorability:
 
-```python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_baseline --method baseline --content_images_folder /path/to/lamem/dataset```
+```
+python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_baseline --method baseline --content_images_folder /path/to/lamem/dataset
+```
 
 For BAE evaluation scary:
 
-```python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9```
+```
+python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9
+```
 
 For BAE evaluation memorability:
 
-```python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0 --weight_image 100```
+```
+python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0 --weight_image 100
+```
 
 For A-BAE evaluation scary:
 
-```python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0.25 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9```
+```
+python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0.25 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9
+```
 
 For A-BAE evaluation memorability: 
 
-```python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0.25 --weight_image 100```
+```
+python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0.25 --weight_image 100
+```
 
 
 ### Training
