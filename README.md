@@ -5,12 +5,12 @@
 <p>
   <table>
     <tr>
-           <td> <img src="sup-mat/cornell_scary.jpg" width="350" height="350"/> <figcaption align="center">Scary</figcaption> </td>
-           <td> <img src="sup-mat/cornell_gloomy.jpg" width="350" height="350"/> <figcaption align="center">Glomy</figcaption> </td>
+           <td> Scary <br/> <img src="sup-mat/cornell_scary.jpg" width="350" height="350"/> </td>
+           <td> Glomy <br/> <img src="sup-mat/cornell_gloomy.jpg" width="350" height="350"/> </td>
     </tr>
     <tr>
-           <td> <img src="sup-mat/cornell_peaceful.jpg" width="350" height="350"/> <figcaption align="center">Peaceful</figcaption> </td>
-           <td> <img src="sup-mat/cornell_happy.jpg" width="350" height="350"/> <figcaption align="center">Happy</figcaption> </td>
+           <td> Peaceful <br/> <img src="sup-mat/cornell_peaceful.jpg" width="350" height="350"/> </td>
+           <td> Happy <br/> <img src="sup-mat/cornell_happy.jpg" width="350" height="350"/> </td>
     </tr>
   </table>
 </p>
@@ -116,8 +116,12 @@ python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 
 python style_gan_train.py --input_dir dataset/devian_art --cache_file_name output/devian_art.npy
 ```
 
-2. Traing a predictor. For memorability predictor refer to (https://github.com/AliaksandrSiarohin/mem-transfer) and convert to keras using https://github.com/AliaksandrSiarohin/caffe2keras .
-For aestetics predictor download it from (https://github.com/BestiVictory/ILGnet) and convert usign https://github.com/AliaksandrSiarohin/caffe2keras . For emotion predictors download images from BAM (see dataset section) and 2 train 2 predictors with following commands:
+2. Traing a predictor:
+For memorability predictor refer to (https://github.com/AliaksandrSiarohin/mem-transfer) and convert to keras using https://github.com/AliaksandrSiarohin/caffe2keras .
+
+For aestetics predictor download it from (https://github.com/BestiVictory/ILGnet) and convert usign https://github.com/AliaksandrSiarohin/caffe2keras .
+
+For emotion predictors download images from BAM (see dataset section) and 2 train 2 predictors with following commands:
 
 ```
 python train_predictor.py --dataset_train dataset/emotion_scary/internal --dataset_val dataset/emotion_scary/external --checkpoint_nam models/scary_internal.h5
