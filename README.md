@@ -113,7 +113,7 @@ python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 
 1. Training a gan. After downloading devian_art simply run:
 
 ```
-python style_gan_train.py --input_dir dataset/devian_art --cache_file_name output/devian_art.npy
+python style_gan_train.py --input_dir dataset/devian_art --cache_file_name output/devian_art.npy --generator_adversarial_objective wgan --discriminator_adversarial_objective wgan --gradient_penalty_weight 10 --display_ratio 100 --checkpoint_ratio 1000 --number_of_epochs 10000y
 ```
 
 2. Traing a predictor:

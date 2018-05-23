@@ -9,7 +9,7 @@ import os
 from skimage.io import imread
 from skimage.color import gray2rgb
 
-from gan.wgan_gp import WGAN_GP
+from gan.gan import GAN
 from gan.dataset import ArrayDataset
 from gan.cmd import parser_with_default_args
 from gan.train import Trainer
@@ -56,7 +56,7 @@ class StylesDataset(ArrayDataset):
         X = self.extract_batch_statistics_from_images()
         self.st_model = self.create_style_transfer_model()
         super(StylesDataset, self).__init__(X, batch_size, noise_size)
-        self._batches_before_shuffle = X.shape[0] // batch_size
+        self._batches_before_shuffle = max(1, X.shape[0] // batch_size)
 
         self._X[:, self.number_of_channels:] = np.log(self._X[:, self.number_of_channels:] + 1e-5)
 
@@ -116,7 +116,7 @@ class StylesDataset(ArrayDataset):
         return st_model
 
     def display(self, output_batch, input_batch=None, number_of_display_images=5):
-        batch = output_batch
+        batch = output_batch[0]
 
         def display_batch_of_images(batch):
             mean = batch[:, :self.number_of_channels]
@@ -150,7 +150,7 @@ def main():
 
     dataset = StylesDataset(args.batch_size, args.input_dir, cache_file_name=args.cache_file_name,
                             content_image=args.content_image)
-    gan = WGAN_GP(generator, discriminator, **vars(args))
+    gan = GAN(generator, discriminator, **vars(args))
     trainer = Trainer(dataset, gan, **vars(args))
 
     trainer.train()
