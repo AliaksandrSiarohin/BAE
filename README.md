@@ -29,6 +29,12 @@
 
 ### Demo
 
+0. Clone repository
+
+```
+git clone --recursive https://github.com/AliaksandrSiarohin/adain-keras
+```
+
 1. Download pretrained [models](https://yadi.sk/d/PXSo4UkN3WN35P).
 
 2. Launch
