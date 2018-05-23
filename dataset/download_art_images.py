@@ -17,7 +17,7 @@ if args.result_folder is None:
 if not os.path.exists(args.result_folder):
     os.makedirs(args.result_folder)
 
-db = sqlite3.connect('dataset/bam2.sqlite')
+db = sqlite3.connect('dataset/bam.sqlite')
 
 cursor = db.cursor()
 

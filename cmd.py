@@ -8,7 +8,7 @@ def parse_args():
 
     parser.add_argument("--encoder", default='models/vgg_normalised.h5', help='Path to the decoder for adain model')
     parser.add_argument("--decoder", default='models/decoder.h5', help="Path to the encoder for adain model")
-    parser.add_argument("--style_generator", default='output/devian_art/epoch_9999_generator.h5',
+    parser.add_argument("--style_generator", default='models/style_generator.h5',
                         help="Path to generator trained using style_gan_train.py")
 
     parser.add_argument("--alpha_sigma", type=float, default=0.25, help="How much style of content image to preserve."
@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument("--lr_decay", type=float, default=1, help="Multiple lr by this on fail")
 
     parser.add_argument("--optimizer", type=str, default='langevin', choices=['grad', 'langevin', 'hamiltonyan', 'mh', 'baseline'])
-    parser.add_argument("--content_image", default='cornell_cropped.jpg')
+    parser.add_argument("--content_image", default='sup-mat/cornell_cropped.jpg')
     parser.add_argument("--adaptive_grad", default=0, type=int, help="Divide gradient by moving average square norm."
                                                                      " Can be userfull for adaptive alpha")
 

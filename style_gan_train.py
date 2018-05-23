@@ -71,7 +71,7 @@ class StylesDataset(ArrayDataset):
             return X
 
         images_names = os.listdir(self.input_dir)
-        X = []  # np.empty(shape=(len(images_names), self.number_of_channels * 2))
+        X = []
 
         print ("Extract batch statistics from style images...")
         for i, name in tqdm(list(enumerate(images_names))):
@@ -142,9 +142,9 @@ def main():
     discriminator = make_discriminator()
 
     parser = parser_with_default_args()
-    parser.add_argument("--input_dir", default='dataset/media_watercolor')
-    parser.add_argument("--cache_file_name", default=None)
-    parser.add_argument("--content_image", default='cornell_cropped.jpg')
+    parser.add_argument("--input_dir", default='dataset/devian_art')
+    parser.add_argument("--cache_file_name", default='output/devian_art.npy')
+    parser.add_argument("--content_image", default='sup-mat/cornell_cropped.jpg')
 
     args = parser.parse_args()
 
