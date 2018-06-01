@@ -86,31 +86,31 @@ python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iter
 For baseline evaluation memorability:
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_baseline --optimizer baseline --alpha_mean 0.5 --content_images_folder dataset/lamem/images
+python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_baseline --optimizer baseline --alpha_mean 0.5 --content_images_folder dataset/lamem/images 
 ```
 
 For BAE evaluation scary:
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_bae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0 --alpha_mean 0.5 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9
+python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_bae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0 --alpha_mean 0.5 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9 --lr 1e-2
 ```
 
 For BAE evaluation memorability:
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_bae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0 --alpha_mean 0.5  --weight_image 100
+python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_bae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0 --alpha_mean 0.5  --weight_image 100  --lr 1e-1
 ```
 
 For A-BAE evaluation scary:
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_abae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0.25 --alpha_mean 0.5 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9
+python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_abae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0.25 --alpha_mean 0.5 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9 --lr 1e-2
 ```
 
 For A-BAE evaluation memorability: 
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_abae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0.25 --alpha_mean 0.5 --weight_image 100
+python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_abae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0.25 --alpha_mean 0.5 --weight_image 100  --lr 1e-1
 ```
 
 
