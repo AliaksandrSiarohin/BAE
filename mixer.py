@@ -52,6 +52,15 @@ class ChainMix(object):
         self.st = K.function(inputs=[z_style_and_alpha, K.learning_phase(), img_tensor],
                              outputs=[stylized_image])
 
+    def initialize_chain(self):
+        z_init = np.random.normal(size=self.args.z_style_dim)
+        alpha_init = np.array([self.args.alpha_mean])
+
+        if self.args.alpha_sigma != 0:
+            self.gd.initialize(np.concatenate([z_init, alpha_init], axis=0))
+        else:
+            self.gd.initialize(z_init)
+
 
     def run(self, image, verbose=False, seed = None):
         img = resize(image, self.args.image_shape[1:], preserve_range=True)
@@ -61,20 +70,14 @@ class ChainMix(object):
         if seed is not None:
             np.random.seed(seed)
         self.gd = self.args.optimizer(oracle, self.args.lr, self.args.lr_decay)
-        z_init = np.random.normal(size=self.args.z_style_dim)
-        alpha_init = np.array([self.args.alpha_mean])
-
-        if self.args.alpha_sigma != 0:
-            self.gd.initialize(np.concatenate([z_init, alpha_init], axis=0))
-        else:
-            self.gd.initialize(z_init)
-
         generated_images = []
         alphas = []
-
+        
         iters = tqdm(range(self.args.number_of_iters)) if verbose else range(self.args.number_of_iters)
 
-        for _ in iters:
+        for i in iters:
+            if i % self.args.reinit == 0:
+                self.initialize_chain()
             raw_image = self.st([self.gd.current, 0, content_image])[0]
             alpha = self.args.alpha_mean if self.args.alpha_sigma == 0 else self.gd.current[-1]
             alphas.append(alpha)

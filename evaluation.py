@@ -1,5 +1,3 @@
-import keras.backend as K
-
 import numpy as np
 from tqdm import tqdm
 from skimage.io import imread, imsave
@@ -218,7 +216,6 @@ def compute_top_score(df, top=5, reinit=100000):
 if __name__ == "__main__":
     tops = [1, 5, 10]
     args = parse_args()
-
     if args.optimizer is not None:
         generate_all_images(args=args, scores_file='chain_scores_dataframe.csv', type='chain')
         df = pd.read_csv(os.path.join(args.output_dir, 'chain_scores_dataframe.csv'))
