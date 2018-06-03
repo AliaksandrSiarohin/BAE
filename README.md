@@ -80,37 +80,37 @@ Evaluation is the most time consuming part.
 For baseline evaluation scary:
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_baseline --method baseline --content_images_folder /path/to/lamem/dataset
+python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_baseline --optimizer baseline --alpha_mean 0.5 --content_images_folder dataset/lamem/images
 ```
 
 For baseline evaluation memorability:
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_baseline --method baseline --content_images_folder /path/to/lamem/dataset
+python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_baseline --optimizer baseline --alpha_mean 0.5 --content_images_folder dataset/lamem/images 
 ```
 
 For BAE evaluation scary:
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9
+python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_bae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0 --alpha_mean 0.5 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9 --lr 1e-2
 ```
 
 For BAE evaluation memorability:
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0 --weight_image 100
+python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_bae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0 --alpha_mean 0.5  --weight_image 100  --lr 1e-1
 ```
 
 For A-BAE evaluation scary:
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0.25 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9
+python evaluation.py --image_shape 3,256,256 --score_type scary --number_of_iters 500 --output_dir output/scary_abae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0.25 --alpha_mean 0.5 --adaptive_grad 1 --weight_image 10 --lr_decay 0.9 --lr 1e-2
 ```
 
 For A-BAE evaluation memorability: 
 
 ```
-python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_bae --method langevin --content_images_folder /path/to/lamem/dataset --alpha_sigma 0.25 --weight_image 100
+python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 500 --output_dir output/mem_abae --optimizer langevin --content_images_folder dataset/lamem/images --alpha_sigma 0.25 --alpha_mean 0.5 --weight_image 100  --lr 1e-1
 ```
 
 
@@ -119,7 +119,7 @@ python evaluation.py --image_shape 3,256,256 --score_type mem --number_of_iters 
 1. Training a gan. After downloading devian_art simply run:
 
 ```
-python style_gan_train.py --input_dir dataset/devian_art --cache_file_name output/devian_art.npy --generator_adversarial_objective wgan --discriminator_adversarial_objective wgan --gradient_penalty_weight 10 --display_ratio 100 --checkpoint_ratio 1000 --number_of_epochs 10000y
+python style_gan_train.py --input_dir dataset/devian_art --cache_file_name output/devian_art.npy --generator_adversarial_objective wgan --discriminator_adversarial_objective wgan --gradient_penalty_weight 10 --display_ratio 100 --checkpoint_ratio 1000 --number_of_epochs 10000
 ```
 
 2. Traing a predictor:
