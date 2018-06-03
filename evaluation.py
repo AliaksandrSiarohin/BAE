@@ -10,7 +10,7 @@ from cmd import parse_args
 from skimage.transform import resize
 
 from losses import get_image_memorability, get_image_aesthetics, get_image_emotion
-from style_transfer_model import preprocess_input, style_transfer_model, deprocess_input
+from style_transfer_model import preprocess_input, style_transfer_model, deprocess_input, get_encoder
 
 import keras.backend as K
 from keras.backend import tf as ktf
@@ -150,31 +150,85 @@ def generate_all_images(args, scores_file, type):
                 df.to_csv(f, index=False, header=False)
 
 
-def compute_top_score(df, top=5, use_internal = True):
+encoder = None
+def compute_content_loss(img1_path, img2_path, encoder_path):
+    global encoder
+    if encoder is None:
+        encoder = get_encoder(encoder_path)
+
+    img1 = imread(img1_path)
+    img1 = preprocess_input(resize(img1, (256, 256), preserve_range=True))
+
+    img2 = imread(img2_path)
+    img2 = preprocess_input(resize(img2, (256, 256), preserve_range=True))
+
+    descriptor1 = encoder.predict(img1)
+    descriptor2 = encoder.predict(img2)
+
+    return np.mean((descriptor1 - descriptor2) **2)
+
+
+def compute_style_descriptor(img_path, encoder_path):
+    global encoder
+    if encoder is None:
+        encoder = get_encoder(encoder_path)
+
+    img = imread(img_path)
+    img = preprocess_input(resize(img, (256, 256), preserve_range=True))
+
+    descriptor = encoder.predict(img)
+    descriptor = np.squeeze(descriptor, axis=0)
+
+    descriptor = descriptor.reshape((3, -1))
+    mu = np.mean(descriptor, axis=1)
+    sigma = np.var(descriptor, axis=1)
+
+    print mu.shape, sigma.shape
+
+    print mu.var()
+    print sigma.var()
+
+    return np.concatenate([mu, sigma])
+
+
+def compute_style_variance(img_paths, encoder_path):
+    descriptos = []
+    for img_path in img_paths:
+        descriptos.append(compute_style_descriptor(img_path, encoder_path))
+
+    descriptos = np.hstack(descriptos)
+    print descriptos.shape
+    elemntwise_var = np.var(descriptos, axis=1)
+    print elemntwise_var.shape
+    return np.mean(elemntwise_var)
+
+
+def compute_top_score(df, top=5, reinit=100000):
     scores = []
-    field = 'internal_scores' if use_internal else 'external_scores' 
     for content in np.unique(df['content_names']):
-        internal_scores = np.array(df[df['content_names'] == content][field])
+        internal_scores = np.array(df[df['content_names'] == content]['internal_scores'])
         gaps = np.array(df[df['content_names'] == content]['gaps'])
-        sorted = np.argsort(internal_scores)[::-1]
-        scores.append(np.mean(gaps[sorted][:top]))
+        for i in range(0, len(internal_scores), reinit):
+            internal_scores_slice = internal_scores[i:(i+reinit)]
+            gaps_slice = gaps[i:(i+reinit)]
+            sorted = np.argsort(internal_scores_slice)[::-1]
+            scores.append(np.mean(gaps_slice[sorted][:top]))
     return np.mean(scores)
 
 if __name__ == "__main__":
     tops = [1, 5, 10]
     args = parse_args()
-    pr_name = ['external', 'internal']
+
     if args.optimizer is not None:
         generate_all_images(args=args, scores_file='chain_scores_dataframe.csv', type='chain')
         df = pd.read_csv(os.path.join(args.output_dir, 'chain_scores_dataframe.csv'))
         for top in tops:
-            for use_internal in [True, False]:
-                print ("Generated scores top %s (%s): %s" % (top, pr_name[use_internal], compute_top_score(df, top, use_internal)))
+            print ("Generated scores top %s : %s" % (top, compute_top_score(df, top)))
     
     if args.optimizer is None:
         generate_all_images(args=args, scores_file='baseline_scores_dataframe.csv', type='baseline')
         df = pd.read_csv(os.path.join(args.output_dir,'baseline_scores_dataframe.csv'))
         for top in tops:
             for use_internal in [True, False]:
-                print ("Generated scores top %s (%s): %s" % (top, pr_name[use_internal], compute_top_score(df, top, use_internal)))
+                print ("Generated scores top %s: %s" % (top, compute_top_score(df, top)))
  
