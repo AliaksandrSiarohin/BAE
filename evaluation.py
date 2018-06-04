@@ -7,6 +7,7 @@ import pandas as pd
 from cmd import parse_args
 from skimage.transform import resize
 
+
 from losses import get_image_memorability, get_image_aesthetics, get_image_emotion
 from style_transfer_model import preprocess_input, style_transfer_model, deprocess_input, get_encoder
 
@@ -149,21 +150,29 @@ def generate_all_images(args, scores_file, type):
 
 
 encoder = None
-def compute_content_loss(img1_path, img2_path, encoder_path):
-    global encoder
-    if encoder is None:
-        encoder = get_encoder(encoder_path)
+prediction_model = None
+def compute_content_loss(img1_path, img2_path):
+    global prediction_model
+    from keras.applications import vgg19 as model
+    if prediction_model is None:
+        prediction_model = model.VGG19()
 
     img1 = imread(img1_path)
-    img1 = preprocess_input(resize(img1, (256, 256), preserve_range=True))
+    img1 = np.expand_dims(resize(img1, (224, 224), preserve_range=True), 0)
+    img1 = model.preprocess_input(img1)
+
+    #print img1.shape, img1.min(), img1.max()
 
     img2 = imread(img2_path)
-    img2 = preprocess_input(resize(img2, (256, 256), preserve_range=True))
+    img2 = np.expand_dims(resize(img2, (224, 224), preserve_range=True), 0)
+    img2 = model.preprocess_input(img2)
 
-    descriptor1 = encoder.predict(img1)
-    descriptor2 = encoder.predict(img2)
+    predictions1 = prediction_model.predict(img1)
+    predictions2 = prediction_model.predict(img2)
 
-    return np.mean((descriptor1 - descriptor2) **2)
+    cross_entropy = -np.sum(predictions1 * np.log(predictions2) + (1 - predictions1) * np.log(1 - predictions2))
+
+    return cross_entropy
 
 
 def compute_style_descriptor(img_path, encoder_path):
@@ -209,6 +218,7 @@ def compute_top_score(df, args, type, top=5, reinit=100000, content_loss=True, s
         internal_scores = np.array(df[df['content_names'] == content]['internal_scores'])
         gaps = np.array(df[df['content_names'] == content]['gaps'])
         styles = np.array(df[df['content_names'] == content]['style_names'])
+        chosen_styles = []
 
         for i in range(0, len(internal_scores), reinit):
             internal_scores_slice = internal_scores[i:(i+reinit)]
@@ -218,19 +228,18 @@ def compute_top_score(df, args, type, top=5, reinit=100000, content_loss=True, s
             scores_gaps.append(np.mean(gaps_slice[sorted][:top]))
 
             styles_slice = styles[i:(i+reinit)]
-            chosen_styles = styles_slice[sorted][:top]
+            chosen_styles += list(styles_slice[sorted][:top])
 
-            if content_loss:
-                for style in chosen_styles:
-                    score = compute_content_loss(os.path.join(generated_images_path, content[:-4], style),
-                                                 os.path.join(content_images_path, content),
-                                                 encoder_path)
-                    scores_content.append(score)
+        if content_loss:
+            for style in chosen_styles:
+                score = compute_content_loss(os.path.join(generated_images_path, content[:-4], style),
+                                                 os.path.join(content_images_path, content))
+                scores_content.append(score)
 
-            if style_var:
-                style_paths = [os.path.join(generated_images_path, content[:-4], style) for style in chosen_styles]
-                score = compute_style_variance(style_paths, encoder_path)
-                scores_style_var.append(score)
+        if style_var:
+            style_paths = [os.path.join(generated_images_path, content[:-4], style) for style in chosen_styles]
+            score = compute_style_variance(style_paths, encoder_path)
+            scores_style_var.append(score)
 
 
     return np.mean(scores_gaps), np.mean(scores_style_var), np.mean(scores_content)
@@ -239,6 +248,8 @@ def compute_top_score(df, args, type, top=5, reinit=100000, content_loss=True, s
 if __name__ == "__main__":
     tops = [1, 5, 10]
     args = parse_args()
+    print compute_content_loss('dataset/tmp/model.png', 'dataset/tmp/water_color.jpg')
+
     if args.optimizer is not None:
         #generate_all_images(args=args, scores_file='chain_scores_dataframe.csv', type='chain')
         df = pd.read_csv(os.path.join(args.output_dir, 'chain_scores_dataframe.csv'))
