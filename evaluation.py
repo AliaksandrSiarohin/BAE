@@ -1,15 +1,15 @@
 import numpy as np
 from tqdm import tqdm
 from skimage.io import imread, imsave
-from mixer import ChainMix
 import os
 import pandas as pd
-from cmd import parse_args
 from skimage.transform import resize
+from skimage.color import gray2rgb
 
-
+from cmd import parse_args
 from losses import get_image_memorability, get_image_aesthetics, get_image_emotion
 from style_transfer_model import preprocess_input, style_transfer_model, deprocess_input, get_encoder
+from mixer import ChainMix
 
 import keras.backend as K
 from keras.backend import tf as ktf
@@ -158,12 +158,12 @@ def compute_content_loss(img1_path, img2_path):
         prediction_model = model.VGG19()
 
     img1 = imread(img1_path)
+    img1 = gray2rgb(img1) if len(img1.shape) == 2 else img1
     img1 = np.expand_dims(resize(img1, (224, 224), preserve_range=True), 0)
     img1 = model.preprocess_input(img1)
 
-    #print img1.shape, img1.min(), img1.max()
-
     img2 = imread(img2_path)
+    img2 = gray2rgb(img2) if len(img2.shape) == 2 else img2
     img2 = np.expand_dims(resize(img2, (224, 224), preserve_range=True), 0)
     img2 = model.preprocess_input(img2)
 
@@ -248,8 +248,7 @@ def compute_top_score(df, args, type, top=5, reinit=100000, content_loss=True, s
 if __name__ == "__main__":
     tops = [1, 5, 10]
     args = parse_args()
-    print compute_content_loss('dataset/tmp/model.png', 'dataset/tmp/water_color.jpg')
-
+    
     if args.optimizer is not None:
         #generate_all_images(args=args, scores_file='chain_scores_dataframe.csv', type='chain')
         df = pd.read_csv(os.path.join(args.output_dir, 'chain_scores_dataframe.csv'))
