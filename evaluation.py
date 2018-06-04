@@ -177,14 +177,11 @@ def compute_style_descriptor(img_path, encoder_path):
     descriptor = encoder.predict(img)
     descriptor = np.squeeze(descriptor, axis=0)
 
-    descriptor = descriptor.reshape((3, -1))
+    #print descriptor.shape
+
+    descriptor = descriptor.reshape((512, -1))
     mu = np.mean(descriptor, axis=1)
-    sigma = np.var(descriptor, axis=1)
-
-    print mu.shape, sigma.shape
-
-    print mu.var()
-    print sigma.var()
+    sigma = np.log(np.var(descriptor, axis=1) + 1e-5)
 
     return np.concatenate([mu, sigma])
 
@@ -194,38 +191,65 @@ def compute_style_variance(img_paths, encoder_path):
     for img_path in img_paths:
         descriptos.append(compute_style_descriptor(img_path, encoder_path))
 
-    descriptos = np.hstack(descriptos)
-    print descriptos.shape
-    elemntwise_var = np.var(descriptos, axis=1)
-    print elemntwise_var.shape
+    descriptos = np.vstack(descriptos)
+    elemntwise_var = np.var(descriptos, axis=0)
     return np.mean(elemntwise_var)
 
 
-def compute_top_score(df, top=5, reinit=100000):
-    scores = []
-    for content in np.unique(df['content_names']):
+def compute_top_score(df, args, type, top=5, reinit=100000, content_loss=True, style_var=True):
+    scores_gaps = []
+    scores_style_var = []
+    scores_content = []
+
+    encoder_path = args.encoder
+    generated_images_path = os.path.join(args.output_dir, type)
+    content_images_path = args.content_images_folder
+
+    for content in tqdm(np.unique(df['content_names'])):
         internal_scores = np.array(df[df['content_names'] == content]['internal_scores'])
         gaps = np.array(df[df['content_names'] == content]['gaps'])
+        styles = np.array(df[df['content_names'] == content]['style_names'])
+
         for i in range(0, len(internal_scores), reinit):
             internal_scores_slice = internal_scores[i:(i+reinit)]
             gaps_slice = gaps[i:(i+reinit)]
+
             sorted = np.argsort(internal_scores_slice)[::-1]
-            scores.append(np.mean(gaps_slice[sorted][:top]))
-    return np.mean(scores)
+            scores_gaps.append(np.mean(gaps_slice[sorted][:top]))
+
+            styles_slice = styles[i:(i+reinit)]
+            chosen_styles = styles_slice[sorted][:top]
+
+            if content_loss:
+                for style in chosen_styles:
+                    score = compute_content_loss(os.path.join(generated_images_path, content[:-4], style),
+                                                 os.path.join(content_images_path, content),
+                                                 encoder_path)
+                    scores_content.append(score)
+
+            if style_var:
+                style_paths = [os.path.join(generated_images_path, content[:-4], style) for style in chosen_styles]
+                score = compute_style_variance(style_paths, encoder_path)
+                scores_style_var.append(score)
+
+
+    return np.mean(scores_gaps), np.mean(scores_style_var), np.mean(scores_content)
+
 
 if __name__ == "__main__":
     tops = [1, 5, 10]
     args = parse_args()
     if args.optimizer is not None:
-        generate_all_images(args=args, scores_file='chain_scores_dataframe.csv', type='chain')
+        #generate_all_images(args=args, scores_file='chain_scores_dataframe.csv', type='chain')
         df = pd.read_csv(os.path.join(args.output_dir, 'chain_scores_dataframe.csv'))
         for top in tops:
-            print ("Generated scores top %s : %s" % (top, compute_top_score(df, top)))
+            print ("Generated scores top %s : gap %s, style-var %s, content-loss %s" %
+                   ((top,) + compute_top_score(df, args, 'chain', top,  args.reinit)))
     
     if args.optimizer is None:
-        generate_all_images(args=args, scores_file='baseline_scores_dataframe.csv', type='baseline')
+        #generate_all_images(args=args, scores_file='baseline_scores_dataframe.csv', type='baseline')
         df = pd.read_csv(os.path.join(args.output_dir,'baseline_scores_dataframe.csv'))
         for top in tops:
-            for use_internal in [True, False]:
-                print ("Generated scores top %s: %s" % (top, compute_top_score(df, top)))
+            print ("Generated scores top %s: gap %s, style-var %s, content-loss %s" %
+                    ((top,) + compute_top_score(df, args, 'baseline', top, args.reinit)))
  

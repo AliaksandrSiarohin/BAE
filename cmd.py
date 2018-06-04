@@ -30,10 +30,7 @@ def parse_args():
     parser.add_argument("--adaptive_grad", default=0, type=int, help="Divide gradient by moving average square norm."
                                                                      " Can be userfull for adaptive alpha")
     parser.add_argument("--reinit", default=1000000, type=int, help="Reinitialize chain every reinit iteration,"
-							            " can provide higher diversity")
-
-
-
+                                                                    " can provide higher diversity")
 
     parser.add_argument("--output_dir", default='output/memorability-evaluation-adaptive_alpha')
     parser.add_argument("--display_ratio", type=int, default=1)
