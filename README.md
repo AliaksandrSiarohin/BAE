@@ -1,4 +1,4 @@
-#
+# Bayesian Style Generation for Enhancing Perceptual Attributes
 
 [Check out our paper]()
 
