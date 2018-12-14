@@ -1,6 +1,6 @@
-# Bayesian Style Generation for Enhancing Perceptual Attributes
+# Enhancing Perceptual Attributes with Bayesian Style Generation
 
-[Check out our paper]()
+[Check out our paper](https://arxiv.org/abs/1812.00717)
 
 <p>
   <table>
@@ -140,4 +140,13 @@ python train_predictor.py --dataset_train dataset/emotion_scary/external --datas
 3. Style transfer model can be downloaded from https://github.com/xunhuang1995/AdaIN-style and converted using https://github.com/AliaksandrSiarohin/pytorch2keras .
 
 
+Citation:
 
+```
+@InProceedings{Siarohin_2018_ACCV,
+title={Enhancing Perceptual Attributes with Bayesian Style Generation},
+author={Siarohin, Aliaksandr and Zen, Gloria and Sebe, Nicu and Ricci, Elisa},
+booktitle = {ACCV},
+month = {December},
+year = {2018}
+}
